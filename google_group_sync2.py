@@ -110,20 +110,18 @@ def get_classes_oracle():
 		sys.exit('could not connect to Oracle Database')
 		
 	#Get list data
-	sql = """
-SELECT DISTINCT sfrstcr_crn
-  || '.' || szf_get_this_soaterm() AS bom_course_id
-FROM sfrstcr
-WHERE sfrstcr_term_code=szf_get_this_soaterm()
-AND sfrstcr_rsts_code IN
-  (SELECT stvrsts_code FROM stvrsts WHERE stvrsts_voice_type = 'R'
-  )
-"""
         sql = """
 SELECT DISTINCT sfrstcr_crn
-  || '.' || '201810' AS bom_course_id
+  || '.'
+  || sfrstcr_term_code AS bom_course_id
 FROM sfrstcr
-WHERE sfrstcr_term_code='201810'
+WHERE
+sfrstcr_term_code IN
+  (SELECT GORICCR_VALUE
+  FROM GORICCR
+  WHERE GORICCR_ICSN_CODE='ACTIVE_TERM'
+  AND GORICCR_SQPR_CODE  ='ELEARNING'
+  )
 AND sfrstcr_rsts_code IN
   (SELECT stvrsts_code FROM stvrsts WHERE stvrsts_voice_type = 'R'
   )
@@ -180,8 +178,8 @@ def get_class_members_oracle(course):
 	sql = """
 select gzf_get_id(sfrstcr_pidm,'USERID') || '@pipeline.sbcc.edu' as EMAIL_ADDRESS
 FROM sfrstcr
-WHERE --sfrstcr_term_code = szf_get_this_soaterm()
-sfrstcr_term_code = '201810'
+WHERE 
+sfrstcr_term_code = '%s'
 AND sfrstcr_crn         = '%s'
 AND sfrstcr_rsts_code  IN
 (SELECT stvrsts_code FROM stvrsts WHERE stvrsts_voice_type = 'R'
@@ -191,9 +189,9 @@ SELECT gzf_get_id(sirasgn_pidm,'USERID')
   || '@pipeline.sbcc.edu' AS EMAIL_ADDRESS
 FROM sirasgn
 WHERE --sirasgn_term_code= szf_get_this_soaterm()
-sirasgn_term_code= '201810'
+sirasgn_term_code= '%s'
 AND sirasgn_crn        ='%s'
-		""" % (course.split('.')[0],course.split('.')[0])
+		""" % (course.split('.')[1],course.split('.')[0],course.split('.')[1],course.split('.')[0])
 		
 	try:
 		cur = con.cursor()
